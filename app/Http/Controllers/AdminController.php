@@ -66,8 +66,15 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Промокод успешно создан!');
     }
 
-    private function getTotalRevenue(): int
+    /**
+     * Общая выручка = донаты всех пользователей - сумма выводов всех пользователей.
+     * Донаты: SUM(payments.amount). Выводы: SUM(users.conclusion).
+     */
+    private function getTotalRevenue(): float
     {
-        return (int) DB::table('user_balances')->where('currency_id', 1)->sum('amount');
+        $donations   = (float) DB::table('payments')->sum('amount');
+        $withdrawals = (float) DB::table('users')->sum('conclusion');
+
+        return round($donations - $withdrawals, 2);
     }
 }

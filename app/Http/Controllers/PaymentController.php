@@ -31,6 +31,15 @@ class PaymentController extends Controller
         $user = $request->user();
 
         DB::transaction(function () use ($request, $user, $validated, &$amount, &$bonusMessage) {
+            // 0. Фиксируем донат в журнале (для расчёта выручки)
+            DB::table('payments')->insert([
+                'user_id'        => $user->id_user,
+                'amount'         => $amount,
+                'payment_method' => $validated['payment_method'],
+                'promo'          => $validated['promo'] ?? null,
+                'created_at'     => now(),
+            ]);
+
             // 1. Начисляем основную сумму в рублях (currency_id = 1)
             $rubBalance = DB::table('user_balances')
                 ->where('user_id', $user->id_user)

@@ -26,7 +26,7 @@ export default function Admin({ stats, promocodes }) {
                 <section className="admin-section">
                     <h1 className="admin-section-title">Ключевые показатели</h1>
                     <div className="admin-stats-grid">
-                        <div className="stat-card"><h2>{fmt(stats?.revenue)} ₽</h2><p>Общая выручка</p></div>
+                        <div className={`stat-card${stats?.revenue < 0 ? ' stat-card--negative' : ''}`}><h2>{fmt(stats?.revenue)} ₽</h2><p>Общая выручка</p></div>
                         <div className="stat-card"><h2>{fmt(stats?.cases_opened)} шт</h2><p>Открыто кейсов</p></div>
                         <div className="stat-card"><h2>{fmt(stats?.upgrades)} шт</h2><p>Кол-во апгрейдов</p></div>
                         <div className="stat-card"><h2>{fmt(stats?.users)} чел.</h2><p>Пользователей</p></div>
