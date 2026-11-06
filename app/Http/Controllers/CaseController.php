@@ -63,7 +63,6 @@ class CaseController extends Controller
         }
 
         $winners = [];
-        $inventoryItems = [];
 
         // 3. Транзакция
         DB::transaction(function () use ($user, $case, $currencyId, $count, $totalPrice, &$winners) {
@@ -109,28 +108,32 @@ class CaseController extends Controller
                 if (!$winnerReward) $winnerReward = $case->rewards->first();
 
                 $gift = $winnerReward->gift;
-                $winners[] = [
-                    'id'     => $gift->id_gift,
-                    'name'   => $gift->name,
-                    'price'  => $gift->price ?? 0,
-                    'rarity' => $gift->rarity,
-                    'img'    => '/images/gifts/' . basename($gift->icon_url),
-                ];
 
-                // Запись в инвентарь
+                // Запись в инвентарь (и получение ID записи для продажи)
                 $inventoryItem = Inventory::where('user_id', $user->id_user)
                     ->where('gift_id', $gift->id_gift)
                     ->first();
 
                 if ($inventoryItem) {
                     $inventoryItem->increment('count_gifts');
+                    $invId = $inventoryItem->id_inv;
                 } else {
-                    Inventory::create([
+                    $newItem = Inventory::create([
                         'user_id' => $user->id_user,
                         'gift_id' => $gift->id_gift,
                         'count_gifts' => 1,
                     ]);
+                    $invId = $newItem->id_inv;
                 }
+
+                $winners[] = [
+                    'id'     => $gift->id_gift,
+                    'id_inv' => $invId, // <--- ДОБАВЛЯЕМ ID ИНВЕНТАРЯ ДЛЯ ПРОДАЖИ
+                    'name'   => $gift->name,
+                    'price'  => $gift->price ?? 0,
+                    'rarity' => $gift->rarity,
+                    'img'    => '/images/gifts/' . basename($gift->icon_url),
+                ];
             }
 
             // Статистика
@@ -158,11 +161,22 @@ class CaseController extends Controller
 
         DB::transaction(function () use ($user, $inventoryItem, $price) {
             // Начисляем ТОЛЬКО рубли (currency_id = 1)
-            $rubBalance = $user->balances()->where('currency_id', 1)->first();
+            $rubBalance = DB::table('user_balances')
+                ->where('user_id', $user->id_user)
+                ->where('currency_id', 1)
+                ->first();
+
             if ($rubBalance) {
-                $rubBalance->increment('amount', $price);
+                DB::table('user_balances')
+                    ->where('user_id', $user->id_user)
+                    ->where('currency_id', 1)
+                    ->increment('amount', $price);
             } else {
-                $user->balances()->create(['currency_id' => 1, 'amount' => $price]);
+                DB::table('user_balances')->insert([
+                    'user_id' => $user->id_user,
+                    'currency_id' => 1,
+                    'amount' => $price
+                ]);
             }
 
             // Уменьшаем количество или удаляем
