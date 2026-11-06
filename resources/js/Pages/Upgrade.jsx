@@ -195,7 +195,7 @@ export default function Upgrade({ inventory, catalog }) {
                         </div>
                         <div className="up-total">
                             <span className="up-label">Сумма ставки:</span>
-                            <b>{fmt(isSpinning ? 0 : currentValue)} ₽</b>
+                            <b>{fmt(currentValue)} ₽</b> {/*<b>{fmt(isSpinning ? 0 : currentValue)} ₽</b>*/}
                         </div>
                     </div>
 
