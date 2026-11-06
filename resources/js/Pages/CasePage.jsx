@@ -8,8 +8,8 @@ import { WinModal } from '@/components/ui/WinModal';
 
 export default function CasePage({ caseData, prizes }) {
   const {
-    rouletteRef, stripRef, strip, spinning, winPrize, modalOpen,
-    openCase, closeModal, WIN_INDEX,
+    rouletteRefs, stripRefs, strips, count, setCount, spinning,
+    winPrizes, modalOpen, openCase, closeModal, WIN_INDEX,
   } = useRoulette(caseData.id, prizes);
 
   const sorted = useMemo(
@@ -27,13 +27,15 @@ export default function CasePage({ caseData, prizes }) {
         </section>
 
         <Roulette
-          rouletteRef={rouletteRef}
-          stripRef={stripRef}
-          strip={strip}
+          rouletteRefs={rouletteRefs}
+          stripRefs={stripRefs}
+          strips={strips}
           spinning={spinning}
           winIndex={WIN_INDEX}
           isWinIndexRevealed={modalOpen}
           price={caseData.price}
+          count={count}
+          onCountChange={setCount}
           onOpen={openCase}
           coinImg={caseData.currency_img}
         />
@@ -46,7 +48,7 @@ export default function CasePage({ caseData, prizes }) {
         </section>
       </main>
 
-      <WinModal open={modalOpen} prize={winPrize} onClose={closeModal} />
+      <WinModal open={modalOpen} prizes={winPrizes} onClose={closeModal} />
     </AppLayout>
   );
 }

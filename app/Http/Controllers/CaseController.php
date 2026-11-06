@@ -44,10 +44,10 @@ class CaseController extends Controller
         $case = GameCase::with('rewards.gift')->findOrFail($id);
         $currencyId = (int) $case->id_currency;
 
-        // 1. Получаем количество (по умолчанию 1, максимум 5)
+        // 1. Получаем количество (по умолчанию 1, максимум 10)
         $count = (int) $request->input('count', 1);
-        if ($count < 1 || $count > 5) {
-            return response()->json(['message' => 'Можно открыть от 1 до 5 кейсов за раз.'], 422);
+        if ($count < 1 || $count > 10) {
+            return response()->json(['message' => 'Можно открыть от 1 до 10 кейсов за раз.'], 422);
         }
 
         // 2. Проверка баланса (умножаем цену на количество)
