@@ -1,12 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
- 
+
 export default function AppLayout({ children }) {
     const { url, props } = usePage();
-    const { auth, balance } = props; // Получаем пользователя и его баланс
- 
-    // Хелпер для активной ссылки
+    const { auth, balance } = props;
+
     const isActive = (path) => url === path ? 'active-link link df' : 'link df';
- 
+    const fmt = (n) => Number(n || 0).toLocaleString('ru-RU');
+
     return (
         <div className='app-wrapper df'>
             <header className="df">
@@ -16,22 +16,27 @@ export default function AppLayout({ children }) {
                 </div>
 
                 <nav className="nav-header df">
-                    <Link href="/" className={isActive('/')}><img src="/images/ui/Layer_1.svg" alt=""/>кейсы</Link>
-                    <Link href="/upgrade" className={isActive('/upgrade')}><img src="/images/ui/bust.svg" alt=""/>АПГРЕЙД</Link>
-                    <Link href="" className={isActive('')}><img src="/images/ui/record.svg" alt=""/>ЛИДЕРЫ</Link>
-                    <Link href="/about" className={isActive('/about')}><img src="/images/ui/fqa.png" alt=""/>FAQ</Link>
+                    <Link href="/" className={isActive('/')}><img src="/images/ui/Layer_1.svg" alt="" />кейсы</Link>
+                    <Link href="/upgrade" className={isActive('/upgrade')}><img src="/images/ui/bust.svg" alt="" />АПГРЕЙД</Link>
+                    <Link href="" className={isActive('')}><img src="/images/ui/record.svg" alt="" />ЛИДЕРЫ</Link>
+                    <Link href="/about" className={isActive('/about')}><img src="/images/ui/fqa.png" alt="" />FAQ</Link>
+
+                    {auth?.user?.is_admin && (
+                        <Link href="/admin" className={isActive('/admin')}>
+                            <img src="/images/ui/record.svg" alt="" />АДМИНКА
+                        </Link>
+                    )}
                 </nav>
 
-                {/* Блок авторизации и баланса */}
                 {auth?.user ? (
                     <div className="inf-lk-cont df">
                         <div className="many-cont df">
                             <div className="df">
-                                <p className="many">{balance?.coins || 0}</p>
+                                <p className="many">{fmt(balance?.coins)}</p>
                                 <img className="coin-img" src="/images/ui/coin.png" alt="COIN" />
                             </div>
                             <div className="df">
-                                <p className="many">{balance?.rubles || 0}</p>
+                                <p className="many">{fmt(balance?.rubles)}</p>
                                 <span className="rub">₽</span>
                             </div>
                             <Link href="/deposit" className="link-donate">+</Link>
@@ -47,40 +52,38 @@ export default function AppLayout({ children }) {
                     </Link>
                 )}
             </header>
- 
-            {/* Основной контент (класс app-main прижимает футер к низу) */}
+
             <main className="app-main">
                 {children}
             </main>
 
-            {/* footer */}
             <footer className="df">
                 <div className="footer-col footer-col--about">
                     <a href="#" className="footer-logo">
-                    <img src="/images/ui/logo.png" alt="TemkaStar" className="footer-logo__img" />
-                    <span className="footer-logo__text">TemkaStar</span>
+                        <img src="/images/ui/logo.png" alt="TemkaStar" className="footer-logo__img" />
+                        <span className="footer-logo__text">TemkaStar</span>
                     </a>
                     <p className="footer-text">
-                    ООО «ТемкаСтар», ИНН 1234567890,<br />
-                    ОГРН 1234567890123 Юридический<br />
-                    адрес: 656067, г. Барнаул, ул.<br />
-                    Балтийская, д. 1, офис 1
+                        ООО «ТемкаСтар», ИНН 1234567890,<br />
+                        ОГРН 1234567890123 Юридический<br />
+                        адрес: 656067, г. Барнаул, ул.<br />
+                        Балтийская, д. 1, офис 1
                     </p>
                 </div>
 
                 <div className="footer-col">
                     <h4 className="footer-title">Документы</h4>
                     <ul className="footer-list">
-                    <li><a href="#" className="footer-link">Пользовательское соглашение</a></li>
-                    <li><a href="#" className="footer-link">Политика конфиденциальности</a></li>
-                    <li><a href="#" className="footer-link">Правила кейсов</a></li>
+                        <li><a href="#" className="footer-link">Пользовательское соглашение</a></li>
+                        <li><a href="#" className="footer-link">Политика конфиденциальности</a></li>
+                        <li><a href="#" className="footer-link">Правила кейсов</a></li>
                     </ul>
                 </div>
 
                 <div className="footer-col">
                     <h4 className="footer-title">Контакты</h4>
                     <a href="mailto:temkastore@mail.ru" className="footer-link">
-                    Email: temkastore@mail.ru
+                        Email: temkastore@mail.ru
                     </a>
                 </div>
 

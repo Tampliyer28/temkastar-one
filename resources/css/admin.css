@@ -1,0 +1,197 @@
+/* ===== Админ-панель ===== */
+
+.admin-page {
+    flex-direction: column;
+    gap: 45px;
+    padding: 35px 20px 80px;
+}
+
+.admin-section {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 20px;
+}
+
+/* Заголовок секции с фиолетовой полосой слева */
+.admin-section-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 26px;
+    line-height: 30px;
+    color: var(--color-2);
+    padding-left: 12px;
+    border-left: 3px solid var(--rar-epic);
+}
+
+/* ---------- Ключевые показатели ---------- */
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+}
+
+.stat-card {
+    background: linear-gradient(180deg, #11284D 0%, #0D2040 100%);
+    border: 1px solid var(--color-8);
+    border-top: 2px solid var(--rar-epic);
+    border-radius: 10px;
+    padding: 28px 16px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.stat-card h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 30px;
+    line-height: 36px;
+    color: var(--color-8);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stat-card p {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--color-6);
+}
+
+/* ---------- Промокоды ---------- */
+.admin-promo-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 35px;
+}
+
+.promo-table-wrapper {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 300px;
+    background: #10254C;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.promo-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.promo-table thead th {
+    background: #26235F;
+    color: var(--color-8);
+    font-weight: 500;
+    font-size: 18px;
+    text-align: left;
+    padding: 12px 16px;
+}
+
+.promo-table td {
+    color: var(--color-6);
+    font-weight: 500;
+    font-size: 16px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #0B1A33;
+}
+
+.promo-table .col-id    { width: 190px; }
+.promo-table .col-bonus { width: 220px; text-align: center; }
+.promo-table td:last-child { text-align: center; }
+
+.promo-form-wrapper {
+    flex: 1 1 0;
+    min-width: 0;
+    background: var(--color-7);
+    border: 1px solid #1B4F96;
+    border-radius: 10px;
+    padding: 28px 35px 35px;
+}
+
+.promo-form-wrapper h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 24px;
+    text-align: center;
+    color: var(--color-2);
+    margin-bottom: 30px;
+}
+
+.promo-form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.promo-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 18px;
+    color: var(--color-6);
+}
+
+.promo-input {
+    width: 100%;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    color: var(--color-10);
+    background: var(--color-7);
+    border: 1px solid var(--color-4);
+    border-radius: 10px;
+    padding: 10px 15px;
+    outline: none;
+}
+
+.promo-input:focus { background: var(--color-3); }
+
+.btn-add-promo {
+    margin-top: 10px;
+    width: 100%;
+    background: var(--color-4);
+    border: 1px solid var(--color-4);
+    border-radius: 10px;
+    padding: 12px 0;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--color-2);
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.btn-add-promo:hover:not(:disabled) { background: rgb(29, 110, 160); }
+.btn-add-promo:disabled { opacity: 0.6; cursor: default; }
+
+.admin-flash {
+    background: rgba(50, 146, 255, 0.12);
+    border: 1px solid var(--color-4);
+    border-radius: 10px;
+    padding: 12px 18px;
+    color: var(--color-2);
+    font-weight: 500;
+}
+
+/* ---------- Адаптив ---------- */
+@media (max-width: 1200px) {
+    .admin-stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 900px) {
+    .admin-promo-layout { flex-direction: column; }
+    .promo-table-wrapper, .promo-form-wrapper { width: 100%; flex: none; }
+    .promo-table .col-id { width: 70px; }
+    .promo-table .col-bonus { width: 120px; }
+}
+
+@media (max-width: 600px) {
+    .admin-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}

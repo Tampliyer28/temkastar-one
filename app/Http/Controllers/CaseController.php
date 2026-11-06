@@ -145,48 +145,76 @@ class CaseController extends Controller
         ]);
     }
 
-    public function sell(Request $request, $id)
+    /**
+     * Продажа подарков, выигранных за ОДНО открытие кейса.
+     * Принимает только то, что выпало: items = [{gift_id, count}, ...].
+     * Остальной инвентарь пользователя не затрагивается.
+     */
+    public function sellWon(Request $request)
     {
         $user = $request->user();
-        $inventoryItem = Inventory::with('gift')
-            ->where('id_inv', $id)
-            ->where('user_id', $user->id_user)
-            ->first();
 
-        if (!$inventoryItem) {
-            return response()->json(['message' => 'Подарок не найден.'], 404);
+        $validated = $request->validate([
+            'items'            => 'required|array|min:1|max:50',
+            'items.*.gift_id'  => 'required|integer',
+            'items.*.count'    => 'required|integer|min:1|max:100',
+        ]);
+
+        // Складываем одинаковые подарки
+        $wanted = [];
+        foreach ($validated['items'] as $row) {
+            $gid = (int) $row['gift_id'];
+            $wanted[$gid] = ($wanted[$gid] ?? 0) + (int) $row['count'];
         }
 
-        $price = $inventoryItem->gift->price ?? 0;
+        $total = 0;
+        $sold = 0;
 
-        DB::transaction(function () use ($user, $inventoryItem, $price) {
-            // Начисляем ТОЛЬКО рубли (currency_id = 1)
-            $rubBalance = DB::table('user_balances')
-                ->where('user_id', $user->id_user)
-                ->where('currency_id', 1)
-                ->first();
+        try {
+            DB::transaction(function () use ($user, $wanted, &$total, &$sold) {
+                foreach ($wanted as $giftId => $need) {
+                    $inv = Inventory::with('gift')
+                        ->where('user_id', $user->id_user)
+                        ->where('gift_id', $giftId)
+                        ->lockForUpdate()
+                        ->first();
 
-            if ($rubBalance) {
-                DB::table('user_balances')
+                    if (!$inv || $inv->count_gifts < $need) {
+                        throw new \RuntimeException('Подарки уже проданы или выведены.');
+                    }
+
+                    $total += ($inv->gift->price ?? 0) * $need;
+                    $sold  += $need;
+
+                    if ($inv->count_gifts > $need) {
+                        $inv->decrement('count_gifts', $need);
+                    } else {
+                        $inv->delete();
+                    }
+                }
+
+                $rubExists = DB::table('user_balances')
                     ->where('user_id', $user->id_user)
                     ->where('currency_id', 1)
-                    ->increment('amount', $price);
-            } else {
-                DB::table('user_balances')->insert([
-                    'user_id' => $user->id_user,
-                    'currency_id' => 1,
-                    'amount' => $price
-                ]);
-            }
+                    ->exists();
 
-            // Уменьшаем количество или удаляем
-            if ($inventoryItem->count_gifts > 1) {
-                $inventoryItem->decrement('count_gifts');
-            } else {
-                $inventoryItem->delete();
-            }
-        });
+                if ($rubExists) {
+                    DB::table('user_balances')
+                        ->where('user_id', $user->id_user)
+                        ->where('currency_id', 1)
+                        ->increment('amount', $total);
+                } else {
+                    DB::table('user_balances')->insert([
+                        'user_id'     => $user->id_user,
+                        'currency_id' => 1,
+                        'amount'      => $total,
+                    ]);
+                }
+            });
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
-        return response()->json(['message' => "Подарок продан за {$price} ₽"]);
+        return response()->json(['message' => "Продано {$sold} шт. за {$total} ₽"]);
     }
 }

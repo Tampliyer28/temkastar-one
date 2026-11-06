@@ -10,59 +10,63 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    /**
-     * Отключаем стандартные created_at и updated_at, 
-     * так как в вашей БД их нет.
-     */
+    // Значения из таблицы rols
+    public const ROLE_USER  = 1;
+    public const ROLE_ADMIN = 2;
+
     public $timestamps = false;
 
-    /**
-     * Указываем ваш первичный ключ.
-     */
+    protected $table = 'users';
     protected $primaryKey = 'id_user';
 
     /**
-     * Поля, которые разрешено заполнять (Mass Assignment).
+     * ИСПРАВЛЕНО: 'role' убрана из fillable, чтобы нельзя было
+     * выдать себе права админа через mass assignment.
+     * Роль задаётся только явно: $user->role = ...
      */
     protected $fillable = [
         'login',
-        'usernametg', // Поле для Telegram (судя по вашей схеме БД)
+        'usernametg',
         'password',
         'level',
         'cases',
         'upgrads',
         'conclusion',
-        'role',
     ];
 
-    /**
-     * Скрываем пароль при выводе JSON.
-     */
     protected $hidden = [
         'password',
     ];
 
-    /**
-     * Касты (преобразования типов).
-     */
     protected function casts(): array
     {
         return [
-            'password' => 'hashed', // Laravel будет автоматически хешировать пароль!
+            'password' => 'hashed',
+            'role'     => 'integer',
         ];
     }
 
-    // Связь с балансом (если есть таблица user_balances)
+    /**
+     * ИСПРАВЛЕНО: в таблице users нет колонки remember_token.
+     * Пустое имя отключает работу с ней, иначе вход с "remember" падает с SQL-ошибкой.
+     */
+    public function getRememberTokenName()
+    {
+        return '';
+    }
+
+    public function isAdmin(): bool
+    {
+        return (int) $this->role === self::ROLE_ADMIN;
+    }
+
     public function balances()
     {
         return $this->hasMany(UserBalance::class, 'user_id', 'id_user');
     }
 
-    // Связь с инвентарем (если есть таблица inventory)
     public function inventory()
     {
         return $this->hasMany(Inventory::class, 'user_id', 'id_user');
     }
-
-        
 }

@@ -7,39 +7,12 @@ use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
-    /**
-     * The root template that's loaded on the first page visit.
-     *
-     * @see https://inertiajs.com/server-side-setup#root-template
-     *
-     * @var string
-     */
     protected $rootView = 'app';
 
-    /**
-     * Determines the current asset version.
-     *
-     * @see https://inertiajs.com/asset-versioning
-     */
     public function version(Request $request): ?string
     {
         return parent::version($request);
     }
-
-    /**
-     * Define the props that are shared by default.
-     *
-     * @see https://inertiajs.com/shared-data
-     *
-     * @return array<string, mixed>
-     */
-    // public function share(Request $request): array
-    // {
-    //     return [
-    //         ...parent::share($request),
-    //         //
-    //     ];
-    // }
 
     public function share(Request $request): array
     {
@@ -48,11 +21,11 @@ class HandleInertiaRequests extends Middleware
 
         if ($user) {
             $balances = $user->balances;
-            $coins = $balances->where('currency_id', 2)->first();
+            $coins  = $balances->where('currency_id', 2)->first();
             $rubles = $balances->where('currency_id', 1)->first();
 
             $balance = [
-                'coins' => $coins ? $coins->amount : 0,
+                'coins'  => $coins ? $coins->amount : 0,
                 'rubles' => $rubles ? $rubles->amount : 0,
             ];
         }
@@ -60,8 +33,10 @@ class HandleInertiaRequests extends Middleware
         return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $user ? [
-                    'id' => $user->id_user,
-                    'login' => $user->login,
+                    'id'       => $user->id_user,
+                    'login'    => $user->login,
+                    'role'     => $user->role,
+                    'is_admin' => $user->isAdmin(),
                 ] : null,
             ],
             'balance' => $balance,
