@@ -54,6 +54,8 @@ export default function Payment() {
                             value={data.amount}
                             onChange={(e) => setData('amount', e.target.value)}
                             placeholder="мин. 50"
+                            min="50"
+                            max="100000000"
                         />
                         {errors.amount && <span style={{ color: '#FF4C4C', fontSize: '13px' }}>{errors.amount}</span>}
                     </label>

@@ -17,11 +17,12 @@ class PaymentController extends Controller
     public function process(Request $request)
     {
         $validated = $request->validate([
-            'amount' => 'required|numeric|min:50',
+            'amount' => 'required|numeric|min:50|max:100000000',
             'payment_method' => 'required|in:qr,card',
             'promo' => 'nullable|string',
         ], [
             'amount.min' => 'Минимальная сумма пополнения — 50 ₽.',
+            'amount.max' => 'Максимальная сумма пополнения за один раз — 100 000 000 ₽.',
             'amount.required' => 'Введите сумму пополнения.',
         ]);
 
