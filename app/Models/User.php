@@ -76,7 +76,7 @@ class User extends Authenticatable
         $oldLevel = $this->level;
         $this->xp += $amount;
         $newLevel = self::calculateLevel($this->xp);
-        
+
         $levelUpData = null;
 
         if ($newLevel > $oldLevel) {
@@ -84,7 +84,7 @@ class User extends Authenticatable
             for ($lvl = $oldLevel + 1; $lvl <= $newLevel; $lvl++) {
                 $this->grantLevelReward($lvl);
             }
-            
+
             $levelUpData = [
                 'old_level' => $oldLevel,
                 'new_level' => $newLevel,
@@ -92,7 +92,7 @@ class User extends Authenticatable
         }
 
         $this->save();
-        
+
         return $levelUpData;
     }
 
@@ -139,8 +139,8 @@ class User extends Authenticatable
 
         // Замените ID на реальные из вашей таблицы `gifts`
         $giftIdToGive = null;
-        if ($level === 5) $giftIdToGive = 41; 
-        if ($level === 10) $giftIdToGive = 52; 
+        if ($level === 5) $giftIdToGive = 41;
+        if ($level === 10) $giftIdToGive = 52;
         if ($level === 20) $giftIdToGive = 55;
         if ($level === 50) $giftIdToGive = 61;
 
@@ -176,5 +176,53 @@ class User extends Authenticatable
         if ($xp >= 7500)     return 3;
         if ($xp >= 2500)     return 2;
         return 1;
+    }
+
+    /**
+     * Минимальный порог XP для указанного уровня.
+     * Точная инверсия calculateLevel().
+     * Уровень 1 = 0 XP (стартовый).
+     */
+    public static function xpForLevel(int $level): int
+    {
+        return match (true) {
+            $level >= 50 => 60000000,
+            $level >= 40 => 25000000,
+            $level >= 30 => 10000000,
+            $level >= 25 => 5000000,
+            $level >= 20 => 2500000,
+            $level >= 15 => 1200000,
+            $level >= 10 => 550000,
+            $level >= 9  => 350000,
+            $level >= 8  => 220000,
+            $level >= 7  => 130000,
+            $level >= 6  => 75000,
+            $level >= 5  => 40000,
+            $level >= 4  => 18000,
+            $level >= 3  => 7500,
+            $level >= 2  => 2500,
+            default      => 0,
+        };
+    }
+
+    /**
+     * Возвращает следующий уровень и порог XP для него.
+     * Если достигнут максимум — вернёт ['next' => null, 'xp' => null].
+     */
+    public static function nextLevelInfo(int $currentLevel): array
+    {
+        // Реальные "ступени" уровней из calculateLevel()
+        $tiers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50];
+
+        foreach ($tiers as $tier) {
+            if ($tier > $currentLevel) {
+                return [
+                    'next' => $tier,
+                    'xp'   => self::xpForLevel($tier),
+                ];
+            }
+        }
+
+        return ['next' => null, 'xp' => null];
     }
 }

@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::post('/api/inventory/{id}/withdraw', [ProfileController::class, 'withdraw'])->name('inventory.withdraw');
+    Route::post('/api/inventory/withdraw-all', [ProfileController::class, 'withdrawAll'])->name('inventory.withdrawAll');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {

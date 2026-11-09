@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use App\Models\Inventory;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
@@ -31,11 +32,21 @@ class ProfileController extends Controller
             ];
         });
 
+        // ── XP и прогресс до следующего уровня ──
+        $currentLevel = (int) ($user->level ?? 1);
+        $currentXp    = (int) ($user->xp ?? 0);
+        $currentThreshold = User::xpForLevel($currentLevel);
+        $nextInfo         = User::nextLevelInfo($currentLevel);
+
         return Inertia::render('Profile', [
             'userData' => [
                 'login'         => $user->login,
                 'telegram'      => $user->usernametg,
-                'level'         => $user->level,
+                'level'         => $currentLevel,
+                'xp'            => $currentXp,
+                'xp_current_lvl'=> $currentThreshold,
+                'xp_next'       => $nextInfo['xp'],       // null на макс. уровне
+                'next_level'    => $nextInfo['next'],     // null на макс. уровне
                 'registered_at' => $user->created_at ? $user->created_at->format('d.m.Y') : 'Недавно',
                 'stats' => [
                     'cases'           => $user->cases ?? 0,
@@ -163,5 +174,32 @@ class ProfileController extends Controller
         });
 
         return response()->json(['message' => "Выведено {$validated['count']} шт. на сумму {$price} ₽"]);
+    }
+
+    public function withdrawAll(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'recipient' => 'required|string|max:255',
+        ]);
+
+        $inventory = Inventory::with('gift')->where('user_id', $user->id_user)->get();
+
+        if ($inventory->isEmpty()) {
+            return response()->json(['message' => 'Инвентарь пуст'], 400);
+        }
+
+        $totalPrice = 0;
+        foreach ($inventory as $item) {
+            $totalPrice += ($item->gift->price ?? 0) * $item->count_gifts;
+        }
+
+        DB::transaction(function () use ($user, $totalPrice) {
+            $user->increment('conclusion', $totalPrice);
+            Inventory::where('user_id', $user->id_user)->delete();
+        });
+
+        return response()->json(['message' => "Все подарки выведены на сумму {$totalPrice} ₽"]);
     }
 }

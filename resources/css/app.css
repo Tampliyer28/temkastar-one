@@ -1950,6 +1950,61 @@ footer {
 
 }
 
+/* ── XP блок в личном кабинете ── */
+.xp-block {
+    margin-top: 12px;
+    width: 100%;
+    max-width: 460px;
+}
+
+.xp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.xp-total {
+    color: #fff;
+    font-size: 14px;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.xp-total b {
+    color: #3292FF;
+    font-weight: 700;
+}
+
+.xp-bar {
+    width: 100%;
+    height: 10px;
+    background: #0F1021;
+    border: 1px solid #1B2A42;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3292FF, #8A5CFF);
+    border-radius: 6px;
+    transition: width .45s ease;
+}
+
+.xp-hint {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #6475A7;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.xp-hint b {
+    color: #fff;
+    font-weight: 600;
+}
+
 @media (max-width: 768px) {
     .leaders-col-val, .leaders-col-extra, .my-rank-val, .my-rank-extra { display: none; }
     .leaders-table-header > div:nth-child(3), .leaders-table-header > div:nth-child(4) { display: none; }

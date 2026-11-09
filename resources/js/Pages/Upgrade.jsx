@@ -152,18 +152,22 @@ export default function Upgrade({ inventory, catalog }) {
         });
 
         setTimeout(() => {
-            setIsSpinning(false);
-            setResult(isWin ? 'success' : 'fail');
-            setSelectedItems([]);
-            setTargetGift(null);
+        setIsSpinning(false);
+        setResult(isWin ? 'success' : 'fail');
+        
+        setSelectedItems([]);
+        setTargetGift(null);
 
-            setTimeout(() => {
-                setResult(null); 
-            }, 2000);
+        setTimeout(() => {
+            setRotation(prev => {
+                const mod = prev % 360;
+                return prev + (360 - mod);
+            });
+            setResult(null);
             
-            router.reload({ only: ['inventory'] }); 
-
-        }, 5300);
+        }, 2000);
+        router.reload({ only: ['inventory'] });
+    }, 5300);
     };
 
     const filteredInventory = useMemo(() => {

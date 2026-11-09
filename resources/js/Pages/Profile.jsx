@@ -3,6 +3,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { useState } from 'react';
 import { WithdrawModal } from '@/components/ui/WithdrawModal';
 import { SellModal } from '@/components/ui/SellModal';
+import { WithdrawAllModal } from '@/Components/ui/WithdrawAllModal';
 
 const fmt = (n) => Number(n || 0).toLocaleString('ru-RU');
 
@@ -11,6 +12,7 @@ export default function Profile({ userData, balance, inventory }) {
     const [sellingAll, setSellingAll] = useState(false);
     const [withdrawGift, setWithdrawGift] = useState(null);
     const [sellGift, setSellGift] = useState(null);
+    const [isWithdrawAllOpen, setIsWithdrawAllOpen] = useState(false);
 
     const sortedInventory = [...inventory].sort((a, b) => {
         if (sortOrder === 'price_desc') return b.price - a.price;
@@ -44,6 +46,20 @@ export default function Profile({ userData, balance, inventory }) {
 
     const totalItems = inventory.reduce((sum, item) => sum + (item.count || 1), 0);
 
+    // ── Расчёт прогресса до следующего уровня ──
+    const xp = Number(userData.xp ?? 0);
+    const xpCurrentLvl = Number(userData.xp_current_lvl ?? 0);
+    const xpNext = userData.xp_next; // может быть null на макс. уровне
+
+    let progressPercent = 0;
+    let xpToNext = 0;
+    if (xpNext != null && xpNext > xpCurrentLvl) {
+        const inLevel = xp - xpCurrentLvl;
+        const need = xpNext - xpCurrentLvl;
+        progressPercent = Math.min(100, Math.max(0, (inLevel / need) * 100));
+        xpToNext = Math.max(0, xpNext - xp);
+    }
+
     return (
         <AppLayout>
             <Head title="Личный кабинет — TemkaStar" />
@@ -56,7 +72,34 @@ export default function Profile({ userData, balance, inventory }) {
                             <h1>{userData.login}</h1>
                             <p><span className="title-lk">Регистрация: </span>{userData.registered_at}</p>
                             <p><span className="title-lk">TG: </span>{userData.telegram || 'Не указан'}</p>
-                            <span className="lvl-text">Уровень {userData.level}</span>
+
+                            {/* ── XP и уровень ── */}
+                            <div className="xp-block">
+                                <div className="xp-header">
+                                    <span className="lvl-text">Уровень {userData.level}</span>
+                                    <span className="xp-total">
+                                        <b>{fmt(xp)}</b> XP всего
+                                    </span>
+                                </div>
+
+                                {xpNext != null ? (
+                                    <>
+                                        <div className="xp-bar">
+                                            <div
+                                                className="xp-bar-fill"
+                                                style={{ width: `${progressPercent}%` }}
+                                            />
+                                        </div>
+                                        <p className="xp-hint">
+                                            {fmt(xp)} / {fmt(xpNext)} XP
+                                            {' '}— до {userData.next_level} уровня осталось{' '}
+                                            <b>{fmt(xpToNext)} XP</b>
+                                        </p>
+                                    </>
+                                ) : (
+                                    <p className="xp-hint">Максимальный уровень достигнут 👑</p>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -103,10 +146,25 @@ export default function Profile({ userData, balance, inventory }) {
                                 <option value="name">По названию (А-Я)</option>
                             </select>
                         </form>
+
                         {inventory.length > 0 && (
-                            <button className="btn-open" onClick={handleSellAll} disabled={sellingAll} style={{ padding: '10px 20px', fontSize: '16px', display: 'flex', gap: '10px' }}>
-                                {sellingAll ? 'Продажа...' : `Продать всё за ${fmt(totalSellPrice)} ₽`}
-                            </button>
+                            <div className="df" style={{ gap: '10px', flexWrap: 'wrap' }}>
+                                <button
+                                    className="btn-open"
+                                    onClick={handleSellAll}
+                                    disabled={sellingAll}
+                                    style={{ padding: '10px 20px', fontSize: '16px' }}
+                                >
+                                    {sellingAll ? 'Продажа...' : `Продать всё за ${fmt(totalSellPrice)} ₽`}
+                                </button>
+                                <button
+                                    className="btn-open"
+                                    onClick={() => setIsWithdrawAllOpen(true)}
+                                    style={{ padding: '10px 20px', fontSize: '16px', background: 'var(--color-9)', borderColor: 'var(--color-9)' }}
+                                >
+                                    Вывести всё
+                                </button>
+                            </div>
                         )}
                     </div>
 
@@ -139,6 +197,11 @@ export default function Profile({ userData, balance, inventory }) {
 
             <WithdrawModal open={!!withdrawGift} gift={withdrawGift} onClose={() => setWithdrawGift(null)} />
             <SellModal open={!!sellGift} gift={sellGift} onClose={() => setSellGift(null)} />
+            <WithdrawAllModal
+                open={isWithdrawAllOpen}
+                onClose={() => setIsWithdrawAllOpen(false)}
+                totalPrice={totalSellPrice}
+            />
         </AppLayout>
     );
 }
