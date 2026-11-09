@@ -18,7 +18,7 @@ export default function AppLayout({ children }) {
                 <nav className="nav-header df">
                     <Link href="/" className={isActive('/')}><img src="/images/ui/Layer_1.svg" alt="" />кейсы</Link>
                     <Link href="/upgrade" className={isActive('/upgrade')}><img src="/images/ui/bust.svg" alt="" />АПГРЕЙД</Link>
-                    <Link href="" className={isActive('')}><img src="/images/ui/record.svg" alt="" />ЛИДЕРЫ</Link>
+                    <Link href="/leaders" className={isActive('/leaders')}><img src="/images/ui/record.svg" alt="" />ЛИДЕРЫ</Link>
                     <Link href="/about" className={isActive('/about')}><img src="/images/ui/fqa.png" alt="" />FAQ</Link>
 
                     {auth?.user?.is_admin && (

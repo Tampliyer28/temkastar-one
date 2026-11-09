@@ -5,12 +5,14 @@ use App\Http\Controllers\CaseController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UpgradeController;
 use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/leaders', [LeaderboardController::class, 'index'])->name('leaders');
 
 Route::get('/about', function () {
     return Inertia::render('About');
