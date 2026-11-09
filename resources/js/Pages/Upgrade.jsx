@@ -1,12 +1,10 @@
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { LevelUpModal } from '@/Components/ui/LevelUpModal';
 
-const fmt = (n) => Number(n).toLocaleString('ru-RU');
+const fmt = (n) => Number(n || 0).toLocaleString('ru-RU');
 
-// ─────────────────────────────────────────────────────────────
-// ХУК ДЛЯ ПЛАВНОГО ИЗМЕНЕНИЯ ЧИСЛА (проценты и дуга)
-// ─────────────────────────────────────────────────────────────
 function useAnimatedNumber(target, duration = 300) {
     const [value, setValue] = useState(target);
     const fromRef = useRef(target);
@@ -19,7 +17,7 @@ function useAnimatedNumber(target, duration = 300) {
         const t0 = performance.now();
         const tick = (now) => {
             const t = Math.min((now - t0) / duration, 1);
-            const eased = 1 - (1 - t) * (1 - t); // easeOutQuad
+            const eased = 1 - (1 - t) * (1 - t);
             setValue(from + (target - from) * eased);
             
             if (t < 1) {
@@ -46,10 +44,10 @@ export default function Upgrade({ inventory, catalog }) {
     const [isSpinning, setIsSpinning] = useState(false);
     const [rotation, setRotation] = useState(0);
     const [result, setResult] = useState(null);
+    const [levelUp, setLevelUp] = useState(null);
 
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    // Фильтры
     const [invSearch, setInvSearch] = useState('');
     const [invSort, setInvSort] = useState('price_desc');
     
@@ -58,19 +56,16 @@ export default function Upgrade({ inventory, catalog }) {
 
     const currentValue = useMemo(() => selectedItems.reduce((sum, item) => sum + item.price, 0), [selectedItems]);
 
-    // Точный шанс (математический)
     const chance = useMemo(() => {
         if (!targetGift || currentValue === 0) return 0;
         return Math.min((currentValue / targetGift.price) * 100, 90);
     }, [currentValue, targetGift]);
 
-    // Плавное значение для отрисовки
     const animatedChance = useAnimatedNumber(chance, 400);
 
     const isInvalidTarget = targetGift && currentValue >= targetGift.price;
     const canUpgrade = targetGift && selectedItems.length > 0 && !isSpinning && !isInvalidTarget && !isRefreshing;
 
-    // СЛЕДИМ ЗА ОБНОВЛЕНИЕМ ИНВЕНТАРЯ
     useEffect(() => {
         if (isRefreshing) {
             const timer = setTimeout(() => {
@@ -131,6 +126,9 @@ export default function Upgrade({ inventory, catalog }) {
                 serverResult = { success: false, error: data.message }; 
             } else {
                 serverResult = data;
+                if (data.levelUp) {
+                    setLevelUp(data.levelUp);
+                }
             }
             
         } catch (e) {
@@ -146,7 +144,6 @@ export default function Upgrade({ inventory, catalog }) {
 
         const fullSpins = 6 * 360;
         
-        // Устанавливаем полный угол, добавляя к текущему (чтобы не было рывка)
         setRotation((prevRotation) => {
             const currentMod = prevRotation % 360;
             let angleDiff = targetAngle - currentMod;
@@ -154,20 +151,14 @@ export default function Upgrade({ inventory, catalog }) {
             return prevRotation + fullSpins + angleDiff;
         });
 
-        // Ждем окончания анимации (5.3 секунды)
         setTimeout(() => {
             setIsSpinning(false);
             setResult(isWin ? 'success' : 'fail');
-            
-            // Сбрасываем предметы и цель
             setSelectedItems([]);
             setTargetGift(null);
 
-            // Через 2 секунды убираем текст победы/луза
             setTimeout(() => {
                 setResult(null); 
-                // МГНОВЕННО ВОЗВРАЩАЕМ СТРЕЛКУ В НАЧАЛО (0 градусов)
-                setRotation(0);
             }, 2000);
             
             router.reload({ only: ['inventory'] }); 
@@ -387,6 +378,8 @@ export default function Upgrade({ inventory, catalog }) {
                     </div>
                 </div>
             </main>
+
+            <LevelUpModal open={!!levelUp} level={levelUp?.new_level} onClose={() => setLevelUp(null)} />
         </AppLayout>
     );
 }

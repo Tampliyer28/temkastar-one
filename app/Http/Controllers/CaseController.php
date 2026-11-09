@@ -44,13 +44,11 @@ class CaseController extends Controller
         $case = GameCase::with('rewards.gift')->findOrFail($id);
         $currencyId = (int) $case->id_currency;
 
-        // 1. Получаем количество (по умолчанию 1, максимум 10)
         $count = (int) $request->input('count', 1);
         if ($count < 1 || $count > 10) {
             return response()->json(['message' => 'Можно открыть от 1 до 10 кейсов за раз.'], 422);
         }
 
-        // 2. Проверка баланса (умножаем цену на количество)
         $totalPrice = $case->price * $count;
         $balance = DB::table('user_balances')
             ->where('user_id', $user->id_user)
@@ -63,16 +61,14 @@ class CaseController extends Controller
         }
 
         $winners = [];
+        $levelUpData = null;
 
-        // 3. Транзакция
-        DB::transaction(function () use ($user, $case, $currencyId, $count, $totalPrice, &$winners) {
-            // Списываем общую сумму
+        DB::transaction(function () use ($user, $case, $currencyId, $count, $totalPrice, &$winners, &$levelUpData) {
             DB::table('user_balances')
                 ->where('user_id', $user->id_user)
                 ->where('currency_id', $currencyId)
                 ->decrement('amount', $totalPrice);
 
-            // Начисляем 1% в монетах (от общей суммы)
             $coinBonus = $totalPrice * 0.01;
             $coinBalance = DB::table('user_balances')
                 ->where('user_id', $user->id_user)
@@ -92,7 +88,6 @@ class CaseController extends Controller
                 ]);
             }
 
-            // Выбираем выигрыши в цикле
             for ($i = 0; $i < $count; $i++) {
                 $totalChance = $case->rewards->sum('chance');
                 $random = mt_rand() / mt_getrandmax() * $totalChance;
@@ -109,7 +104,6 @@ class CaseController extends Controller
 
                 $gift = $winnerReward->gift;
 
-                // Запись в инвентарь (и получение ID записи для продажи)
                 $inventoryItem = Inventory::where('user_id', $user->id_user)
                     ->where('gift_id', $gift->id_gift)
                     ->first();
@@ -128,7 +122,7 @@ class CaseController extends Controller
 
                 $winners[] = [
                     'id'     => $gift->id_gift,
-                    'id_inv' => $invId, // <--- ДОБАВЛЯЕМ ID ИНВЕНТАРЯ ДЛЯ ПРОДАЖИ
+                    'id_inv' => $invId,
                     'name'   => $gift->name,
                     'price'  => $gift->price ?? 0,
                     'rarity' => $gift->rarity,
@@ -136,20 +130,18 @@ class CaseController extends Controller
                 ];
             }
 
-            // Статистика
             $user->increment('cases', $count);
+
+            // СОХРАНЯЕМ ДАННЫЕ О ПОВЫШЕНИИ УРОВНЯ
+            $levelUpData = $user->addXp((int) ($totalPrice / 10));
         });
 
         return response()->json([
-            'prizes' => $winners, // Возвращаем массив призов
+            'prizes' => $winners,
+            'levelUp' => $levelUpData,
         ]);
     }
 
-    /**
-     * Продажа подарков, выигранных за ОДНО открытие кейса.
-     * Принимает только то, что выпало: items = [{gift_id, count}, ...].
-     * Остальной инвентарь пользователя не затрагивается.
-     */
     public function sellWon(Request $request)
     {
         $user = $request->user();
@@ -160,7 +152,6 @@ class CaseController extends Controller
             'items.*.count'    => 'required|integer|min:1|max:100',
         ]);
 
-        // Складываем одинаковые подарки
         $wanted = [];
         foreach ($validated['items'] as $row) {
             $gid = (int) $row['gift_id'];

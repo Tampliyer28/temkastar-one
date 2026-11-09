@@ -4,7 +4,7 @@ import { router } from '@inertiajs/react';
 const STRIP_LEN = 60;
 const WIN_INDEX = 50;
 const SPIN_MS = 4000;
-const SPIN_EXTRA_MS = 600; // небольшой разброс времени между рулетками
+const SPIN_EXTRA_MS = 600;
 export const COUNT_OPTIONS = [1, 2, 5, 10];
 
 function pickRandom(prizes) {
@@ -23,8 +23,7 @@ const makeStrip = (prizes, winner = null) =>
 const makeStrips = (prizes, n, winners = null) =>
   Array.from({ length: n }, (_, i) => makeStrip(prizes, winners ? winners[i] : null));
 
-export function useRoulette(caseId, allPrizes) {
-  // Массивы ref'ов: по одному на каждую рулетку
+export function useRoulette(caseId, allPrizes, callbacks = {}) {
   const rouletteRefs = useRef([]);
   const stripRefs = useRef([]);
 
@@ -34,7 +33,6 @@ export function useRoulette(caseId, allPrizes) {
   const [modalOpen, setModalOpen] = useState(false);
   const [strips, setStrips] = useState(() => makeStrips(allPrizes, 1));
 
-  // Центрируем все ленты в покое
   useLayoutEffect(() => {
     strips.forEach((_, i) => {
       const s = stripRefs.current[i], r = rouletteRefs.current[i];
@@ -73,7 +71,6 @@ export function useRoulette(caseId, allPrizes) {
         });
       }
 
-      // Модалка открывается, когда остановились все рулетки
       setTimeout(() => {
         setSpinning(false);
         setModalOpen(true);
@@ -81,7 +78,6 @@ export function useRoulette(caseId, allPrizes) {
     }, 50);
   }, []);
 
-  // Одна кнопка — открывает сразу `count` кейсов
   const openCase = useCallback(async () => {
     if (spinning || modalOpen) return;
     setSpinning(true);
@@ -109,6 +105,11 @@ export function useRoulette(caseId, allPrizes) {
       const winners = data.prizes || [];
       if (winners.length === 0) throw new Error('Сервер не вернул призы');
 
+      // ВЫЗОВ МОДАЛКИ ПРИ ПОВЫШЕНИИ УРОВНЯ
+      if (data.levelUp && callbacks.onLevelUp) {
+        callbacks.onLevelUp(data.levelUp);
+      }
+
       router.reload({ only: ['balance', 'auth'] });
 
       setWinPrizes(winners);
@@ -120,7 +121,7 @@ export function useRoulette(caseId, allPrizes) {
       alert(error.message);
       setSpinning(false);
     }
-  }, [spinning, modalOpen, caseId, count, allPrizes, startAnimation]);
+  }, [spinning, modalOpen, caseId, count, allPrizes, startAnimation, callbacks]);
 
   const closeModal = useCallback(() => {
     setModalOpen(false);
